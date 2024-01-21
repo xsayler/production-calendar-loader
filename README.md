@@ -7,6 +7,8 @@ This crate contains an implementation of the production calendar loader from htt
 
 ## Usage
 
+## Example of asynchronous loading
+
 ```rust
 #[tokio::main]
 pub async fn main() {
@@ -15,6 +17,22 @@ pub async fn main() {
     let calendar = loader.load(Country::Ru, 2024).await.unwrap();
 
     println!("Working days in {}: {}", calendar.get_year(), calendar.get_work_days_count());
+}
+```
+
+## Example of synchronous loading
+
+```rust
+pub fn main() {
+    let loader = ProductionCalendarLoader::new_sync();
+
+    let calendar = loader.load(Country::Ru, 2024).unwrap();
+
+    println!(
+        "Working days in {}: {}",
+        calendar.get_year(),
+        calendar.get_work_days_count()
+    );
 }
 ```
 

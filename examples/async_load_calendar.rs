@@ -1,10 +1,9 @@
 use production_calendar_loader::{Country, ProductionCalendarLoader};
 
-#[tokio::main]
-pub async fn main() {
-    let loader = ProductionCalendarLoader::new();
+pub fn main() {
+    let loader = ProductionCalendarLoader::new_sync();
 
-    let calendar = loader.load(Country::Ru, 2024).await.unwrap();
+    let calendar = loader.load(Country::Ru, 2024).unwrap();
 
     println!(
         "Working days in {}: {}",

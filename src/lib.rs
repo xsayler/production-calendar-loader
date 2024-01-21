@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::{error::Error, fmt::Display, marker::PhantomData};
 
 use production_calendar::{
     calendar::ProductionCalendar,
@@ -38,30 +38,27 @@ pub struct CalendarDay {
     pub week_day: String,
 }
 
-pub struct ProductionCalendarLoader {
-    client: reqwest::Client,
+pub struct Init;
+
+pub struct Async;
+
+pub struct Sync;
+
+pub struct ProductionCalendarLoader<Type = Init> {
+    _type: PhantomData<Type>,
 }
 
-impl ProductionCalendarLoader {
-    pub fn new(client: reqwest::Client) -> Self {
-        Self { client }
+impl ProductionCalendarLoader<Init> {
+    pub fn new() -> ProductionCalendarLoader<Async> {
+        ProductionCalendarLoader::<Async> { _type: PhantomData }
     }
 
-    pub async fn load(
-        &self,
-        country: Country,
-        year: u32,
-    ) -> Result<ProductionCalendar, Box<dyn Error>> {
-        let url = format!(
-            "https://production-calendar.ru/get/{}/{}/json",
-            country, year
-        );
-        let request = self.client.get(url).build()?;
-        let calendar: Calendar = self.client.execute(request).await?.json().await?;
-
-        self.map_to_production_calendar(year, calendar)
+    pub fn new_sync() -> ProductionCalendarLoader<Sync> {
+        ProductionCalendarLoader::<Sync> { _type: PhantomData }
     }
+}
 
+impl<T> ProductionCalendarLoader<T> {
     fn map_to_production_calendar(
         &self,
         year: u32,
@@ -103,15 +100,53 @@ impl ProductionCalendarLoader {
     }
 }
 
+impl ProductionCalendarLoader<Async> {
+    pub async fn load(
+        &self,
+        country: Country,
+        year: u32,
+    ) -> Result<ProductionCalendar, Box<dyn Error>> {
+        let url = format!(
+            "https://production-calendar.ru/get/{}/{}/json",
+            country, year
+        );
+        // let request = self.client.get(url).build()?;
+        let calendar: Calendar = reqwest::get(url).await?.json().await?;
+
+        self.map_to_production_calendar(year, calendar)
+    }
+}
+
+impl ProductionCalendarLoader<Sync> {
+    pub fn load(&self, country: Country, year: u32) -> Result<ProductionCalendar, Box<dyn Error>> {
+        let url = format!(
+            "https://production-calendar.ru/get/{}/{}/json",
+            country, year
+        );
+        let calendar: Calendar = reqwest::blocking::get(url)?.json()?;
+
+        self.map_to_production_calendar(year, calendar)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{Country, ProductionCalendarLoader};
 
     #[tokio::test]
-    async fn test() {
-        let loader = ProductionCalendarLoader::new(reqwest::Client::new());
+    async fn test_async_load() {
+        let loader = ProductionCalendarLoader::new();
 
         let calendar = loader.load(Country::Ru, 2024).await.unwrap();
+
+        assert_eq!(366, calendar.get_days_count());
+    }
+
+    #[test]
+    fn test_sync_load() {
+        let loader = ProductionCalendarLoader::new_sync();
+
+        let calendar = loader.load(Country::Ru, 2024).unwrap();
 
         assert_eq!(366, calendar.get_days_count());
     }
