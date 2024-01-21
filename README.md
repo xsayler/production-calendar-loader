@@ -20,6 +20,8 @@ pub async fn main() {
 }
 ```
 
+For a full example, see: [examples](https://github.com/xsayler/production-calendar-loader/tree/main/examples/async_load_calendar.rs)
+
 ## Example of synchronous loading
 
 ```rust
@@ -36,7 +38,7 @@ pub fn main() {
 }
 ```
 
-For a full example, see: [examples](https://github.com/xsayler/production-calendar-loader/tree/main/examples/load_calendar.rs)
+For a full example, see: [examples](https://github.com/xsayler/production-calendar-loader/tree/main/examples/sync_load_calendar.rs)
 
 ## License
 
