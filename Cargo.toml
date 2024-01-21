@@ -1,0 +1,25 @@
+[package]
+name = "production-calendar-loader"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Aleksandr Rassamagin"
+]
+categories = ["calendar"]
+keywords = ["production", "calendar", "loader"]
+description = "Production calendar loader"
+rust-version = "1.75"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/xsayler/production-calendar-loader"
+repository = "https://github.com/xsayler/production-calendar-loader"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+production-calendar = { git = "https://github.com/xsayler/production-calendar.git"}
+reqwest = { version = "0.11.23", features = ["json"] }
+serde = { version = "1.0.195", features = ["serde_derive"] }
+serde_json = "1.0.111"
+time = { version = "0.3.31", features = ["macros", "parsing"] }
+tokio = { version = "1.35.1", features = ["full"] }
