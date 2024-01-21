@@ -1,6 +1,9 @@
-use std::{fmt::Display, error::Error};
+use std::{error::Error, fmt::Display};
 
-use production_calendar::{calendar::ProductionCalendar, types::{Day, DayType}};
+use production_calendar::{
+    calendar::ProductionCalendar,
+    types::{Day, DayType},
+};
 use serde::Deserialize;
 use time::{macros::format_description, Date};
 
@@ -36,7 +39,7 @@ pub struct CalendarDay {
 }
 
 pub struct ProductionCalendarLoader {
-    client: reqwest::Client
+    client: reqwest::Client,
 }
 
 impl ProductionCalendarLoader {
@@ -44,7 +47,11 @@ impl ProductionCalendarLoader {
         Self { client }
     }
 
-    pub async fn load(&self, country: Country, year: u32) -> Result<ProductionCalendar, Box<dyn Error>> {
+    pub async fn load(
+        &self,
+        country: Country,
+        year: u32,
+    ) -> Result<ProductionCalendar, Box<dyn Error>> {
         let url = format!(
             "https://production-calendar.ru/get/{}/{}/json",
             country, year
@@ -55,17 +62,18 @@ impl ProductionCalendarLoader {
         self.map_to_production_calendar(year, calendar)
     }
 
-    fn map_to_production_calendar(&self, year: u32, calendar: Calendar) -> Result<ProductionCalendar, Box<dyn Error>> {
-        let mut days: Vec<Day> = vec!();
+    fn map_to_production_calendar(
+        &self,
+        year: u32,
+        calendar: Calendar,
+    ) -> Result<ProductionCalendar, Box<dyn Error>> {
+        let mut days: Vec<Day> = vec![];
         for day in calendar.days {
             let day = self.map_to_day(day)?;
             days.push(day);
         }
 
-        let prod_calendar = ProductionCalendar::new(
-            year, 
-            days
-        );
+        let prod_calendar = ProductionCalendar::new(year, days);
 
         Ok(prod_calendar)
     }
@@ -74,7 +82,7 @@ impl ProductionCalendarLoader {
         let format = format_description!("[day].[month].[year]");
         let date = Date::parse(day.date.as_str(), &format)?;
         let day = Day {
-            date: date,
+            date,
             day: date.day().into(),
             month: date.month().into(),
             year: date.year(),
@@ -90,19 +98,19 @@ impl ProductionCalendarLoader {
             2 | 6 => Ok(DayType::Weekend),
             3 | 4 => Ok(DayType::Holiday),
             5 => Ok(DayType::PreHoliday),
-            _ => Err(Box::<dyn Error>::from("Unknown week day"))
+            _ => Err(Box::<dyn Error>::from("Unknown week day")),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{ProductionCalendarLoader, Country};
-    
+    use crate::{Country, ProductionCalendarLoader};
+
     #[tokio::test]
     async fn test() {
         let loader = ProductionCalendarLoader::new(reqwest::Client::new());
-        
+
         let calendar = loader.load(Country::Ru, 2024).await.unwrap();
 
         assert_eq!(366, calendar.get_days_count());
